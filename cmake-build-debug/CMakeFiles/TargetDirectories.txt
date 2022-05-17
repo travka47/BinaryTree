@@ -1,0 +1,3 @@
+/home/travka47/CLionProjects/BinaryTree/cmake-build-debug/CMakeFiles/BinaryTree.dir
+/home/travka47/CLionProjects/BinaryTree/cmake-build-debug/CMakeFiles/edit_cache.dir
+/home/travka47/CLionProjects/BinaryTree/cmake-build-debug/CMakeFiles/rebuild_cache.dir
