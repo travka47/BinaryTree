@@ -250,10 +250,17 @@ void btree::search(int key) {
     if (is_empty())
         cout << "The tree is empty" << endl;
     else {
-        if (!search(key, root))
-            cout << "There is NO element with this value" << endl;
-        else
-            cout << "Element with this value exists" << endl;
+        if (!cin.good()) {
+            cin.clear();
+            cin.ignore(numeric_limits<streamsize>::max(), '\n');
+            cout << "ERROR: Invalid input" << endl;
+        }
+        else {
+            if (!search(key, root))
+                cout << "There is NO element with this value" << endl;
+            else
+                cout << "Element with this value exists" << endl;
+        }
     }
 }
 
@@ -261,11 +268,18 @@ void btree::delete_node(int value) {
     if (is_empty())
         cout << "ERROR: The tree is empty, nothing to delete" << endl;
     else {
-        if (!search(value, root))
-            cout << "ERROR: Value NOT found" << endl;
+        if (!cin.good()) {
+            cin.clear();
+            cin.ignore(numeric_limits<streamsize>::max(), '\n');
+            cout << "ERROR: Invalid input" << endl;
+        }
         else {
-            root = delete_node(value, root);
-            cout << "Value was deleted" << endl;
+            if (!search(value, root))
+                cout << "ERROR: Value NOT found" << endl;
+            else {
+                root = delete_node(value, root);
+                cout << "Value was deleted" << endl;
+            }
         }
     }
 }
