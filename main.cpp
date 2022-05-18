@@ -79,6 +79,7 @@ private:
     void inorder(node *leaf);
     void preorder(node *leaf);
     void postorder(node *leaf);
+    bool base_check();
 };
 
 /////////////////////////////////////PRIVATE FUNCTIONS/////////////////////////////////////
@@ -221,6 +222,20 @@ void btree::postorder(node *leaf) {
     }
 }
 
+bool btree::base_check() {
+    if (!cin.good()) {
+        cin.clear();
+        cin.ignore(numeric_limits<streamsize>::max(), '\n');
+        cout << "ERROR: Invalid input" << endl;
+        return false;
+    }
+    if (is_empty()) {
+        cout << "ERROR: The tree is empty" << endl;
+        return false;
+    }
+    return true;
+}
+
 /////////////////////////////////////PUBLIC FUNCTIONS/////////////////////////////////////
 
 btree::btree() {
@@ -247,39 +262,21 @@ void btree::insert(int key) {
 }
 
 void btree::search(int key) {
-    if (is_empty())
-        cout << "The tree is empty" << endl;
-    else {
-        if (!cin.good()) {
-            cin.clear();
-            cin.ignore(numeric_limits<streamsize>::max(), '\n');
-            cout << "ERROR: Invalid input" << endl;
-        }
-        else {
-            if (!search(key, root))
-                cout << "There is NO element with this value" << endl;
-            else
-                cout << "Element with this value exists" << endl;
-        }
+    if (base_check()) {
+        if (!search(key, root))
+            cout << "There is NO element with this value" << endl;
+        else
+            cout << "Element with this value exists" << endl;
     }
 }
 
 void btree::delete_node(int value) {
-    if (is_empty())
-        cout << "ERROR: The tree is empty, nothing to delete" << endl;
-    else {
-        if (!cin.good()) {
-            cin.clear();
-            cin.ignore(numeric_limits<streamsize>::max(), '\n');
-            cout << "ERROR: Invalid input" << endl;
-        }
+    if (base_check()) {
+        if (!search(value, root))
+            cout << "ERROR: Value NOT found" << endl;
         else {
-            if (!search(value, root))
-                cout << "ERROR: Value NOT found" << endl;
-            else {
-                root = delete_node(value, root);
-                cout << "Value was deleted" << endl;
-            }
+            root = delete_node(value, root);
+            cout << "Value was deleted" << endl;
         }
     }
 }
@@ -303,21 +300,12 @@ void btree::print() {
 
 void btree::iteration(int key) {
     node* res;
-    if (is_empty())
-        cout << "ERROR: The tree is empty" << endl;
-    else {
-        if (!cin.good()) {
-            cin.clear();
-            cin.ignore(numeric_limits<streamsize>::max(), '\n');
-            cout << "ERROR: Invalid input" << endl;
-        }
+    if (base_check()) {
+        if (!search(key, root))
+            cout << "ERROR: There is NO element with this value" << endl;
         else {
-            if (!search(key, root))
-                cout << "ERROR: There is NO element with this value" << endl;
-            else {
-                res = iteration(key, root);
-                res == nullptr ? cout << "Next element is undefined" << endl : cout << "Next value: " << res->key_value << endl;
-            }
+            res = iteration(key, root);
+            res == nullptr ? cout << "Next element is undefined" << endl : cout << "Next value: " << res->key_value << endl;
         }
     }
 }
