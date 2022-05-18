@@ -6,52 +6,82 @@
 #include <limits>
 using namespace std;
 
+/////////////////////////////////////PARSER/////////////////////////////////////
+
+vector<int> parse(const string &s) {
+    vector<int> v;
+    stringstream ss{s};
+    int n;
+    while (ss >> n || !ss.eof()) {
+        if (ss.fail()) {
+            ss.clear();
+            ss.ignore(1);
+            continue;
+        }
+        v.push_back(n);
+    }
+    if (v.empty())
+        cout << "ERROR: Invalid input" << endl;
+    return v;
+}
+
+/////////////////////////////////////TRUNK/////////////////////////////////////
+// Helper function to print branches of the binary tree
+
+struct trunk {
+    trunk *prev;
+    string str;
+    trunk(trunk *prev, string str) {
+        this->prev = prev;
+        this->str = str;
+    }
+};
+
+void show_trunks(trunk *p) {
+    if (p == nullptr) return;
+    show_trunks(p->prev);
+    cout << p->str;
+}
+
+/////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////BINARY TREE/////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////
+
 struct node {
     int key_value;
     node *left;
     node *right;
 };
 
-struct Trunk {
-    Trunk *prev;
-    string str;
-    Trunk(Trunk *prev, string str) {
-        this->prev = prev;
-        this->str = str;
-    }
-};
-
 class btree {
 public:
     btree();
-
-    node *root;
-    void insert(int key);
-    node *search(int key);
-    node *iteration(int key);
-    bool delete_node(int key);
     bool is_empty();
+    void insert(int key);
+    void search(int key);
+    void delete_node(int key);
+    btree delete_all(btree);
     void print();
+    void iteration(int key);
     void inorder();
     void preorder();
     void postorder();
 
 private:
+    node *root;
+
     void insert(int key, node *leaf);
     node *search(int key, node *leaf);
-    node *iteration(int key, node *leaf);
-    node *delete_node(int key, node *leaf);
     node *min(node *leaf);
-    bool is_empty(node *leaf);
-    void print(node *root, Trunk *prev, bool isLeft);
+    node *delete_node(int key, node *leaf);
+    void print(node *root, trunk *prev, bool is_left);
+    node *iteration(int key, node *leaf);
     void inorder(node *leaf);
     void preorder(node *leaf);
     void postorder(node *leaf);
 };
 
-btree::btree() {
-    root=NULL;
-}
+/////////////////////////////////////PRIVATE FUNCTIONS/////////////////////////////////////
 
 void btree::insert(int key, node *leaf) {
     if(key< leaf->key_value) {
@@ -89,30 +119,68 @@ node *btree::search(int key, node *leaf) {
 }
 
 node* btree::min(node *n) {
-    if (n->left == nullptr) return n;
+    if (n->left == nullptr)
+        return n;
     return min(n->left);
 }
 
 node *btree::delete_node(int value, node *node) {
-    if (node == nullptr) return node;
-    if (value < node->key_value) node->left = delete_node(value, node->left);
-    else if (value > node->key_value) node->right = delete_node(value, node->right);
-    else if (node->right != nullptr && node->left != nullptr) {
-        node->key_value = min(node->right)->key_value;
-        node->right = delete_node(node->key_value, node->right);
-    }
+    if (node == nullptr)
+        return node;
+
+    if (value < node->key_value)
+        node->left = delete_node(value, node->left);
+    else
+        if (value > node->key_value)
+            node->right = delete_node(value, node->right);
+    else
+        if (node->right != nullptr && node->left != nullptr) {
+            node->key_value = min(node->right)->key_value;
+            node->right = delete_node(node->key_value, node->right);
+        }
     else {
-        if (node->left != nullptr) node = node->left;
-        else if (node->right != nullptr) node = node->right;
-        else node = nullptr;
+        if (node->left != nullptr)
+            node = node->left;
+        else
+            if (node->right != nullptr)
+                node = node->right;
+            else
+                node = nullptr;
     }
+
     return node;
 }
 
-bool btree::delete_node(int value) {
-    if (!search(value, root)) return false;
-    root = delete_node(value, root);
-    return true;
+void btree::print(node* root, trunk *prev, bool is_left) {
+    if (root == nullptr)
+        return;
+
+    string prev_str = "    ";
+    trunk *tr = new trunk(prev, prev_str);
+
+    print(root->right, tr, true);
+
+    if (!prev)
+        tr->str = "———";
+    else {
+        if (is_left) {
+            tr->str = ".———";
+            prev_str = "   |";
+        }
+        else {
+            tr->str = "`———";
+            prev->str = prev_str;
+        }
+    }
+
+    show_trunks(tr);
+    cout << " " << root->key_value << endl;
+
+    if (prev)
+        prev->str = prev_str;
+    tr->str = "   |";
+
+    print(root->left, tr, false);
 }
 
 node *btree::iteration(int key, node *leaf) {
@@ -123,85 +191,10 @@ node *btree::iteration(int key, node *leaf) {
             successor = current;
             current = current->left;
         }
-        else current = current->right;
+        else
+            current = current->right;
     }
     return successor;
-}
-
-bool btree::is_empty(node *leaf) {
-    return root == NULL;
-}
-
-// Helper function to print branches of the binary tree
-void showTrunks(Trunk *p) {
-    if (p == nullptr) return;
-    showTrunks(p->prev);
-    cout << p->str;
-}
-
-void btree::print(node* root, Trunk *prev, bool isLeft) {
-    if (root == nullptr) return;
-
-    string prev_str = "    ";
-    Trunk *trunk = new Trunk(prev, prev_str);
-
-    print(root->right, trunk, true);
-
-    if (!prev) {
-        trunk->str = "———";
-    }
-    else if (isLeft) {
-        trunk->str = ".———";
-        prev_str = "   |";
-    } else {
-        trunk->str = "`———";
-        prev->str = prev_str;
-    }
-
-    showTrunks(trunk);
-    cout << " " << root->key_value << endl;
-
-    if (prev) prev->str = prev_str;
-    trunk->str = "   |";
-
-    print(root->left, trunk, false);
-}
-
-void btree::insert(int key) {
-    if (search(key) == NULL) {
-        if(root!=NULL)
-            insert(key, root);
-        else {
-            root=new node;
-            root->key_value=key;
-            root->left=NULL;
-            root->right=NULL;
-        }
-    }
-    else {
-        cout << "ERROR: Element with value " << key << " already exists in the tree" << endl;
-    }
-}
-
-node *btree::search(int key) {
-    return search(key, root);
-}
-
-node *btree::iteration(int key) {
-    return iteration(key, root);
-}
-
-bool btree::is_empty() {
-    is_empty(root);
-}
-
-void btree::print() {
-    if (is_empty()) {
-        cout << "The tree is empty" << endl;
-    }
-    else {
-        print(root, nullptr, false);
-    }
 }
 
 void btree::inorder(node *leaf) {
@@ -228,54 +221,128 @@ void btree::postorder(node *leaf) {
     }
 }
 
-void btree::inorder() {
-    if (is_empty()) {
-        cout << "The tree is empty" << endl;
+/////////////////////////////////////PUBLIC FUNCTIONS/////////////////////////////////////
+
+btree::btree() {
+    root=NULL;
+}
+
+bool btree::is_empty() {
+    return root == NULL;
+}
+
+void btree::insert(int key) {
+    if (search(key, root) == NULL) {
+        if(root!=NULL)
+            insert(key, root);
+        else {
+            root=new node;
+            root->key_value=key;
+            root->left=NULL;
+            root->right=NULL;
+        }
     }
+    else
+        cout << "ERROR: Element with value " << key << " already exists in the tree" << endl;
+}
+
+void btree::search(int key) {
+    if (is_empty())
+        cout << "The tree is empty" << endl;
+    else {
+        if (!search(key, root))
+            cout << "There is NO element with this value" << endl;
+        else
+            cout << "Element with this value exists" << endl;
+    }
+}
+
+void btree::delete_node(int value) {
+    if (is_empty())
+        cout << "ERROR: The tree is empty, nothing to delete" << endl;
+    else {
+        if (!search(value, root))
+            cout << "ERROR: Value NOT found" << endl;
+        else {
+            root = delete_node(value, root);
+            cout << "Value was deleted" << endl;
+        }
+    }
+}
+
+btree btree::delete_all(btree obj) {
+    if (is_empty())
+        cout << "ERROR: The tree has already been cleared" << endl;
+    else {
+        obj = btree();
+        cout << "All elements were deleted" << endl;
+    }
+    return obj;
+}
+
+void btree::print() {
+    if (is_empty())
+        cout << "The tree is empty" << endl;
+    else
+        print(root, nullptr, false);
+}
+
+void btree::iteration(int key) {
+    node* res;
+    if (is_empty())
+        cout << "ERROR: The tree is empty" << endl;
+    else {
+        if (!cin.good()) {
+            cin.clear();
+            cin.ignore(numeric_limits<streamsize>::max(), '\n');
+            cout << "ERROR: Invalid input" << endl;
+        }
+        else {
+            if (!search(key, root))
+                cout << "ERROR: There is NO element with this value" << endl;
+            else {
+                res = iteration(key, root);
+                res == nullptr ? cout << "Next element is undefined" << endl : cout << "Next value: " << res->key_value << endl;
+            }
+        }
+    }
+}
+
+void btree::inorder() {
+    if (is_empty())
+        cout << "The tree is empty" << endl;
     else {
         cout << "Inorder traversal: ";
         inorder(root);
-    }}
+        cout << endl;
+    }
+}
 
 void btree::preorder() {
-    if (is_empty()) {
+    if (is_empty())
         cout << "The tree is empty" << endl;
-    }
     else {
         cout << "Preorder traversal: ";
         preorder(root);
+        cout << endl;
     }
 }
 
 void btree::postorder() {
-    if (is_empty()) {
+    if (is_empty())
         cout << "The tree is empty" << endl;
-    }
     else {
         cout << "Postorder traversal: ";
         postorder(root);
+        cout << endl;
     }
 }
 
-vector<int> parse(const string &s) {
-    vector<int> v;
-    stringstream ss{s};
-    int n;
-    while (ss >> n || !ss.eof()) {
-        if (ss.fail()) {
-            ss.clear();
-            ss.ignore(1);
-            continue;
-        }
-        v.push_back(n);
-    }
-    if (v.empty()) cout << "ERROR: Invalid input" << endl;
-    return v;
-}
+/////////////////////////////////////MAIN/////////////////////////////////////
 
 int main() {
     btree obj;
-    int option, val, n;
+    int option, val;
     string values;
     vector<int> v;
 
@@ -288,9 +355,9 @@ int main() {
         cout << "4. Delete all elements" << endl;
         cout << "5. Print tree" << endl;
         cout << "6. Iteration" << endl;
-        cout << "7. Preorder traversal" << endl; //прямой
-        cout << "8. Inorder traversal" << endl; //симметричный
-        cout << "9. Postorder traversal" << endl; //обратный
+        cout << "7. Preorder traversal" << endl; //прямой обход
+        cout << "8. Inorder traversal" << endl; //симметричный обход
+        cout << "9. Postorder traversal" << endl; //обратный обход
         cout << "0. Exit Program" << endl;
         cout << "................................." << endl;
 
@@ -306,42 +373,21 @@ int main() {
                 getline(cin, values);
                 getline(cin, values);
                 v = parse(values);
-                for (auto el : v) obj.insert(el);
+                for (auto el : v)
+                    obj.insert(el);
                 break;
             case 2:
                 cout << "Enter value to SEARCH: ";
                 cin >> val;
-                if (obj.search(val) != NULL) {
-                    cout << "Element with this value exists" << endl;
-                }
-                else {
-                    cout << "There is NO element with this value" << endl;
-                }
+                obj.search(val);
                 break;
             case 3:
                 cout << "Enter value to DELETE: ";
                 cin >> val;
-                if (obj.is_empty()) {
-                    cout << "ERROR: The tree is empty, nothing to delete" << endl;
-                }
-                else {
-                    if (obj.search(val) != NULL) {
-                        obj.delete_node(val);
-                        cout << "Value was deleted" << endl;
-                    }
-                    else {
-                        cout << "ERROR: Value NOT found" << endl;
-                    }
-                }
+                obj.delete_node(val);
                 break;
             case 4:
-                if (obj.is_empty()) {
-                    cout << "ERROR: the tree has already been cleared" << endl;
-                }
-                else {
-                    obj = btree();
-                    cout << "All elements were deleted" << endl;
-                }
+                obj = obj.delete_all(obj);
                 break;
             case 5:
                 obj.print();
@@ -349,34 +395,16 @@ int main() {
             case 6:
                 cout << "Enter value to ITERATE: ";
                 cin >> val;
-                node* res;
-                if (obj.is_empty()) cout << "ERROR: The tree is empty" << endl;
-                else if (!cin.good()) {
-                    cin.clear();
-                    cin.ignore(numeric_limits<streamsize>::max(), '\n');
-                    cout << "Element must be int" << endl;
-                }
-                else {
-                    if (!obj.search(val)) {
-                        cout << "ERROR: There is NO element with this value" << endl;
-                    }
-                    else {
-                        res = obj.iteration(val);
-                        res == nullptr ? cout << "Next element is undefined" << endl : cout << res->key_value << endl;
-                    }
-                }
+                obj.iteration(val);
                 break;
             case 7:
                 obj.preorder();
-                cout << endl;
                 break;
             case 8:
                 obj.inorder();
-                cout << endl;
                 break;
             case 9:
                 obj.postorder();
-                cout << endl;
                 break;
             default:
                 cout << "Enter proper option number" << endl;
